@@ -3,6 +3,7 @@
 import { useQuery } from 'react-query'
 import { dashboardAPI } from '@/lib/api'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
+import { StatCard } from '@/components/common/StatCard'
 import { formatCurrency, formatDate, getAccountTypeLabel, getStatusBadge } from '@/lib/utils'
 import {
   Wallet,
@@ -16,57 +17,6 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
-function StatCard({ 
-  title, 
-  value, 
-  subtitle, 
-  icon: Icon, 
-  color = 'primary',
-  href
-}: {
-  title: string
-  value: string | number
-  subtitle?: string
-  icon: any
-  color?: 'primary' | 'success' | 'warning' | 'danger'
-  href?: string
-}) {
-  const colorClasses = {
-    primary: 'bg-primary-500',
-    success: 'bg-success-500',
-    warning: 'bg-warning-500',
-    danger: 'bg-danger-500',
-  }
-
-  const CardContent = () => (
-    <div className="flex items-center">
-      <div className="flex-1">
-        <p className="text-sm font-medium text-gray-600">{title}</p>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-        {subtitle && (
-          <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
-        )}
-      </div>
-      <div className={`w-12 h-12 ${colorClasses[color]} rounded-lg flex items-center justify-center`}>
-        <Icon className="w-6 h-6 text-white" />
-      </div>
-    </div>
-  )
-
-  if (href) {
-    return (
-      <Link href={href} className="card hover:shadow-md transition-shadow">
-        <CardContent />
-      </Link>
-    )
-  }
-
-  return (
-    <div className="card">
-      <CardContent />
-    </div>
-  )
-}
 
 function MemberDashboardContent() {
   const { data: memberData, isLoading } = useQuery(

@@ -32,18 +32,9 @@ app.get('/', (c) => {
 app.route('/api/auth', authRoutes);
 
 // Protected routes (authentication required)
-app.use('/api/*', async (c, next) => {
-  // Skip auth for auth routes
-  if (c.req.path.startsWith('/api/auth')) {
-    return next();
-  }
-  
-  const jwtMiddleware = jwt({
-    secret: c.env.JWT_SECRET,
-  });
-  
-  return jwtMiddleware(c, next);
-});
+app.use('/api/*', jwt({
+  secret: c.env.JWT_SECRET,
+}));
 
 // API routes
 app.route('/api/members', memberRoutes);

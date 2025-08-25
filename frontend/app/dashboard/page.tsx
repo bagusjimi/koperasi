@@ -3,6 +3,7 @@
 import { useQuery } from 'react-query'
 import { dashboardAPI } from '@/lib/api'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
+import { StatCard } from '@/components/common/StatCard'
 import { formatCurrency, formatNumber } from '@/lib/utils'
 import {
   Users,
@@ -32,56 +33,6 @@ import {
   ResponsiveContainer
 } from 'recharts'
 
-function StatCard({ 
-  title, 
-  value, 
-  change, 
-  changeType, 
-  icon: Icon, 
-  color = 'primary' 
-}: {
-  title: string
-  value: string | number
-  change?: string
-  changeType?: 'increase' | 'decrease'
-  icon: any
-  color?: 'primary' | 'success' | 'warning' | 'danger'
-}) {
-  const colorClasses = {
-    primary: 'bg-primary-500',
-    success: 'bg-success-500',
-    warning: 'bg-warning-500',
-    danger: 'bg-danger-500',
-  }
-
-  return (
-    <div className="card">
-      <div className="flex items-center">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {change && (
-            <div className="flex items-center mt-1">
-              {changeType === 'increase' ? (
-                <TrendingUp className="w-4 h-4 text-success-500 mr-1" />
-              ) : (
-                <TrendingDown className="w-4 h-4 text-danger-500 mr-1" />
-              )}
-              <span className={`text-sm ${
-                changeType === 'increase' ? 'text-success-600' : 'text-danger-600'
-              }`}>
-                {change}
-              </span>
-            </div>
-          )}
-        </div>
-        <div className={`w-12 h-12 ${colorClasses[color]} rounded-lg flex items-center justify-center`}>
-          <Icon className="w-6 h-6 text-white" />
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function DashboardContent() {
   const { data: overview, isLoading: overviewLoading } = useQuery(

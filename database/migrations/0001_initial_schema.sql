@@ -157,7 +157,8 @@ CREATE TABLE shu_calculations (
     shu_loan DECIMAL(15,2) DEFAULT 0.00,
     total_shu DECIMAL(15,2) DEFAULT 0.00,
     is_distributed BOOLEAN DEFAULT FALSE,
-    calculated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    calculated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(period_id, member_id)
 );
 
 -- Indexes for better performance

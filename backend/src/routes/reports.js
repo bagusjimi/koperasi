@@ -498,11 +498,14 @@ reports.post('/periods', async (c) => {
 
     const periodName = body.periodName || `Periode ${data.startDate} - ${data.endDate}`;
 
-    const result = await c.env.DB.prepare(`
+    await c.env.DB.prepare(`
       INSERT INTO financial_periods (period_name, start_date, end_date)
       VALUES (?, ?, ?)
-      RETURNING id
-    `).bind(periodName, data.startDate, data.endDate).first();
+    `).bind(periodName, data.startDate, data.endDate).run();
+    
+    const result = await c.env.DB.prepare(
+      'SELECT last_insert_rowid() as id'
+    ).first();
 
     return c.json({
       message: 'Financial period created successfully',

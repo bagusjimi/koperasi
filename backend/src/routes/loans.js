@@ -89,13 +89,12 @@ loans.post('/apply', async (c) => {
     const interestRate = defaultRates[data.loanType];
     const monthlyPayment = calculateMonthlyPayment(data.principalAmount, interestRate, data.termMonths);
 
-    const result = await c.env.DB.prepare(`
+    await c.env.DB.prepare(`
       INSERT INTO loan_accounts (
         member_id, loan_number, loan_type, principal_amount, interest_rate, 
         term_months, monthly_payment, outstanding_balance, status, 
         application_date, maturity_date
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', date('now'), date('now', '+' || ? || ' months'))
-      RETURNING id
     `).bind(
       data.memberId,
       loanNumber,
@@ -106,6 +105,10 @@ loans.post('/apply', async (c) => {
       monthlyPayment,
       data.principalAmount,
       data.termMonths
+    ).run();
+    
+    const result = await c.env.DB.prepare(
+      'SELECT last_insert_rowid() as id'
     ).first();
 
     return c.json({

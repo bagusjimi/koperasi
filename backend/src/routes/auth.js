@@ -105,58 +105,96 @@ auth.post('/register', async (c) => {
     // Hash password
     const passwordHash = await bcrypt.hash(data.password, 10);
 
-    // Generate member number
-    const memberCount = await c.env.DB.prepare(
-      'SELECT COUNT(*) as count FROM members'
-    ).first();
-    const memberNumber = `KOP${String(memberCount.count + 1).padStart(3, '0')}`;
-
-    // Start transaction
-    const userId = await c.env.DB.prepare(
-      'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?) RETURNING id'
-    ).bind(data.username, data.email, passwordHash, 'member').first();
-
-    const memberId = await c.env.DB.prepare(
-      `INSERT INTO members (user_id, member_number, full_name, id_number, phone, address, date_of_birth, gender, occupation, join_date) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, date('now')) RETURNING id`
-    ).bind(
-      userId.id,
-      memberNumber,
-      data.fullName,
-      data.idNumber,
-      data.phone || null,
-      data.address || null,
-      data.dateOfBirth || null,
-      data.gender || null,
-      data.occupation || null
-    ).first();
-
-    // Create default savings accounts
-    const savingsTypes = [
-      { type: 'pokok', amount: 100000, rate: 0.0000 },
-      { type: 'wajib', amount: 0, rate: 0.0200 },
-      { type: 'sukarela', amount: 0, rate: 0.0300 }
-    ];
-
-    for (const savings of savingsTypes) {
-      const accountNumber = `S${savings.type.charAt(0).toUpperCase()}${memberNumber.slice(3)}`;
-      await c.env.DB.prepare(
-        'INSERT INTO savings_accounts (member_id, account_type, account_number, balance, interest_rate) VALUES (?, ?, ?, ?, ?)'
-      ).bind(memberId.id, savings.type, accountNumber, savings.amount, savings.rate).run();
+    // Generate unique member number with retry logic
+    let memberNumber;
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    while (attempts < maxAttempts) {
+      const memberCount = await c.env.DB.prepare(
+        'SELECT COUNT(*) as count FROM members'
+      ).first();
+      memberNumber = `KOP${String(memberCount.count + 1 + attempts).padStart(3, '0')}`;
+      
+      // Check if member number already exists
+      const existing = await c.env.DB.prepare(
+        'SELECT id FROM members WHERE member_number = ?'
+      ).bind(memberNumber).first();
+      
+      if (!existing) {
+        break;
+      }
+      attempts++;
+    }
+    
+    if (attempts >= maxAttempts) {
+      return c.json({ error: 'Unable to generate unique member number' }, 500);
     }
 
-    return c.json({
-      message: 'Registration successful',
-      memberNumber,
-      user: {
-        id: userId.id,
-        username: data.username,
-        email: data.email,
-        role: 'member',
-        fullName: data.fullName,
+    // Start transaction - use D1 compatible pattern with transaction
+    try {
+      await c.env.DB.prepare('BEGIN TRANSACTION').run();
+      
+      await c.env.DB.prepare(
+        'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)'
+      ).bind(data.username, data.email, passwordHash, 'member').run();
+      
+      const userId = await c.env.DB.prepare(
+        'SELECT last_insert_rowid() as id'
+      ).first();
+
+      await c.env.DB.prepare(
+        `INSERT INTO members (user_id, member_number, full_name, id_number, phone, address, date_of_birth, gender, occupation, join_date) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, date('now'))`
+      ).bind(
+        userId.id,
         memberNumber,
+        data.fullName,
+        data.idNumber,
+        data.phone || null,
+        data.address || null,
+        data.dateOfBirth || null,
+        data.gender || null,
+        data.occupation || null
+      ).run();
+      
+      const memberId = await c.env.DB.prepare(
+        'SELECT last_insert_rowid() as id'
+      ).first();
+
+      // Create default savings accounts
+      const savingsTypes = [
+        { type: 'pokok', amount: 100000, rate: 0.0000 },
+        { type: 'wajib', amount: 0, rate: 0.0200 },
+        { type: 'sukarela', amount: 0, rate: 0.0300 }
+      ];
+
+      for (const savings of savingsTypes) {
+        const accountNumber = `S${savings.type.charAt(0).toUpperCase()}${memberNumber.slice(3)}`;
+        await c.env.DB.prepare(
+          'INSERT INTO savings_accounts (member_id, account_type, account_number, balance, interest_rate) VALUES (?, ?, ?, ?, ?)'
+        ).bind(memberId.id, savings.type, accountNumber, savings.amount, savings.rate).run();
       }
-    }, 201);
+      
+      await c.env.DB.prepare('COMMIT').run();
+
+      return c.json({
+        message: 'Registration successful',
+        memberNumber,
+        user: {
+          id: userId.id,
+          username: data.username,
+          email: data.email,
+          role: 'member',
+          fullName: data.fullName,
+          memberNumber,
+        }
+      }, 201);
+      
+    } catch (dbError) {
+      await c.env.DB.prepare('ROLLBACK').run();
+      throw dbError;
+    }
 
   } catch (error) {
     console.error('Registration error:', error);
