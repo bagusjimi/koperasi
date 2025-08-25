@@ -3,6 +3,12 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 
+// Helper function for getting last insert ID
+async function getLastInsertId(db) {
+  const result = await db.prepare('SELECT last_insert_rowid() as id').first();
+  return result;
+}
+
 const auth = new Hono();
 
 // Validation schemas
@@ -139,9 +145,7 @@ auth.post('/register', async (c) => {
         'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)'
       ).bind(data.username, data.email, passwordHash, 'member').run();
       
-      const userId = await c.env.DB.prepare(
-        'SELECT last_insert_rowid() as id'
-      ).first();
+      const userId = await getLastInsertId(c.env.DB);
 
       await c.env.DB.prepare(
         `INSERT INTO members (user_id, member_number, full_name, id_number, phone, address, date_of_birth, gender, occupation, join_date) 
@@ -158,9 +162,7 @@ auth.post('/register', async (c) => {
         data.occupation || null
       ).run();
       
-      const memberId = await c.env.DB.prepare(
-        'SELECT last_insert_rowid() as id'
-      ).first();
+      const memberId = await getLastInsertId(c.env.DB);
 
       // Create default savings accounts
       const savingsTypes = [

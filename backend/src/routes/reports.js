@@ -1,6 +1,12 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 
+// Helper function for getting last insert ID
+async function getLastInsertId(db) {
+  const result = await db.prepare('SELECT last_insert_rowid() as id').first();
+  return result;
+}
+
 const reports = new Hono();
 
 // Validation schemas
@@ -503,9 +509,7 @@ reports.post('/periods', async (c) => {
       VALUES (?, ?, ?)
     `).bind(periodName, data.startDate, data.endDate).run();
     
-    const result = await c.env.DB.prepare(
-      'SELECT last_insert_rowid() as id'
-    ).first();
+    const result = await getLastInsertId(c.env.DB);
 
     return c.json({
       message: 'Financial period created successfully',

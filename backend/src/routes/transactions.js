@@ -190,7 +190,7 @@ transactions.post('/business', async (c) => {
       return c.json({ error: 'Invalid account code' }, 400);
     }
 
-    const transactionId = `TXN${Date.now()}${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+    const transactionId = `TXN${crypto.randomUUID().replace(/-/g, '').substring(0, 12).toUpperCase()}`;
 
     // Record business transaction
     await c.env.DB.prepare(`

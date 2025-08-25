@@ -27,11 +27,17 @@ const loanPaymentSchema = z.object({
 
 // Utility functions
 function generateLoanNumber() {
-  return `PJM${Date.now()}${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
+  return `PJM${crypto.randomUUID().replace(/-/g, '').substring(0, 10).toUpperCase()}`;
 }
 
 function generateTransactionId() {
-  return `TXN${Date.now()}${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+  return `TXN${crypto.randomUUID().replace(/-/g, '').substring(0, 12).toUpperCase()}`;
+}
+
+// Helper function for getting last insert ID
+async function getLastInsertId(db) {
+  const result = await db.prepare('SELECT last_insert_rowid() as id').first();
+  return result;
 }
 
 function calculateMonthlyPayment(principal, rate, months) {
@@ -107,9 +113,7 @@ loans.post('/apply', async (c) => {
       data.termMonths
     ).run();
     
-    const result = await c.env.DB.prepare(
-      'SELECT last_insert_rowid() as id'
-    ).first();
+    const result = await getLastInsertId(c.env.DB);
 
     return c.json({
       message: 'Loan application submitted successfully',

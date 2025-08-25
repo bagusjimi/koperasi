@@ -13,7 +13,7 @@ const transactionSchema = z.object({
 
 // Utility function to generate transaction ID
 function generateTransactionId() {
-  return `TXN${Date.now()}${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+  return `TXN${crypto.randomUUID().replace(/-/g, '').substring(0, 12).toUpperCase()}`;
 }
 
 // Utility function to record general ledger entries

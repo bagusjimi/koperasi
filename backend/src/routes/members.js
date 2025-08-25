@@ -84,6 +84,54 @@ members.get('/', async (c) => {
   }
 });
 
+// Get member statistics (admin/manager only) - MOVED BEFORE /:id route
+members.get('/stats/overview', async (c) => {
+  try {
+    const payload = c.get('jwtPayload');
+    
+    if (!['admin', 'manager'].includes(payload.role)) {
+      return c.json({ error: 'Insufficient permissions' }, 403);
+    }
+
+    const stats = await c.env.DB.prepare(`
+      SELECT 
+        COUNT(*) as total_members,
+        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_members,
+        COUNT(CASE WHEN status = 'inactive' THEN 1 END) as inactive_members,
+        COUNT(CASE WHEN status = 'suspended' THEN 1 END) as suspended_members,
+        COUNT(CASE WHEN join_date >= date('now', '-30 days') THEN 1 END) as new_members_30_days
+      FROM members
+    `).first();
+
+    const savingsStats = await c.env.DB.prepare(`
+      SELECT 
+        SUM(CASE WHEN account_type = 'pokok' THEN balance ELSE 0 END) as total_simpanan_pokok,
+        SUM(CASE WHEN account_type = 'wajib' THEN balance ELSE 0 END) as total_simpanan_wajib,
+        SUM(CASE WHEN account_type = 'sukarela' THEN balance ELSE 0 END) as total_simpanan_sukarela,
+        SUM(balance) as total_savings
+      FROM savings_accounts
+    `).first();
+
+    const loanStats = await c.env.DB.prepare(`
+      SELECT 
+        COUNT(*) as total_loans,
+        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_loans,
+        SUM(CASE WHEN status = 'active' THEN outstanding_balance ELSE 0 END) as total_outstanding
+      FROM loan_accounts
+    `).first();
+
+    return c.json({
+      members: stats,
+      savings: savingsStats,
+      loans: loanStats
+    });
+
+  } catch (error) {
+    console.error('Get member stats error:', error);
+    return c.json({ error: 'Failed to get statistics' }, 500);
+  }
+});
+
 // Get member by ID
 members.get('/:id', async (c) => {
   try {
@@ -192,52 +240,5 @@ members.put('/:id', async (c) => {
   }
 });
 
-// Get member statistics (admin/manager only)
-members.get('/stats/overview', async (c) => {
-  try {
-    const payload = c.get('jwtPayload');
-    
-    if (!['admin', 'manager'].includes(payload.role)) {
-      return c.json({ error: 'Insufficient permissions' }, 403);
-    }
-
-    const stats = await c.env.DB.prepare(`
-      SELECT 
-        COUNT(*) as total_members,
-        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_members,
-        COUNT(CASE WHEN status = 'inactive' THEN 1 END) as inactive_members,
-        COUNT(CASE WHEN status = 'suspended' THEN 1 END) as suspended_members,
-        COUNT(CASE WHEN join_date >= date('now', '-30 days') THEN 1 END) as new_members_30_days
-      FROM members
-    `).first();
-
-    const savingsStats = await c.env.DB.prepare(`
-      SELECT 
-        SUM(CASE WHEN account_type = 'pokok' THEN balance ELSE 0 END) as total_simpanan_pokok,
-        SUM(CASE WHEN account_type = 'wajib' THEN balance ELSE 0 END) as total_simpanan_wajib,
-        SUM(CASE WHEN account_type = 'sukarela' THEN balance ELSE 0 END) as total_simpanan_sukarela,
-        SUM(balance) as total_savings
-      FROM savings_accounts
-    `).first();
-
-    const loanStats = await c.env.DB.prepare(`
-      SELECT 
-        COUNT(*) as total_loans,
-        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_loans,
-        SUM(CASE WHEN status = 'active' THEN outstanding_balance ELSE 0 END) as total_outstanding
-      FROM loan_accounts
-    `).first();
-
-    return c.json({
-      members: stats,
-      savings: savingsStats,
-      loans: loanStats
-    });
-
-  } catch (error) {
-    console.error('Get member stats error:', error);
-    return c.json({ error: 'Failed to get statistics' }, 500);
-  }
-});
 
 export { members as memberRoutes };

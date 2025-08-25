@@ -33,7 +33,7 @@ app.route('/api/auth', authRoutes);
 
 // Protected routes (authentication required)
 app.use('/api/*', jwt({
-  secret: c.env.JWT_SECRET,
+  secret: (c) => c.env.JWT_SECRET,
 }));
 
 // API routes

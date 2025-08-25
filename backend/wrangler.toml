@@ -3,7 +3,7 @@ main = "src/index.js"
 compatibility_date = "2024-01-01"
 
 [vars]
-JWT_SECRET = "your-jwt-secret-here"
+JWT_SECRET = "your-jwt-secret-here" # TODO: Change this to a secure secret before deployment!
 ENVIRONMENT = "development"
 
 [[d1_databases]]
