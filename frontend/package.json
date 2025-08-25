@@ -1,0 +1,39 @@
+{
+  "name": "koperasi-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "deploy": "npm run build && npx @cloudflare/next-on-pages",
+    "preview": "npm run build && wrangler pages dev .next"
+  },
+  "dependencies": {
+    "next": "14.1.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-hook-form": "^7.49.3",
+    "react-query": "^3.39.3",
+    "axios": "^1.6.7",
+    "date-fns": "^3.3.1",
+    "recharts": "^2.10.4",
+    "lucide-react": "^0.323.0",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@cloudflare/next-on-pages": "^1.8.5",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.1.0",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5",
+    "wrangler": "^3.28.2"
+  }
+}

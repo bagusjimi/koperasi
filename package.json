@@ -1,0 +1,36 @@
+{
+  "name": "koperasi-desa",
+  "version": "1.0.0",
+  "description": "Aplikasi Manajemen Koperasi Desa",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "deploy": "npm run deploy:frontend && npm run deploy:backend",
+    "deploy:frontend": "cd frontend && npm run deploy",
+    "deploy:backend": "cd backend && npm run deploy",
+    "db:setup": "cd database && npm run setup",
+    "db:migrate": "cd database && npm run migrate",
+    "db:seed": "cd database && npm run seed",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install && cd ../database && npm install",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "cd frontend && npm run test",
+    "test:backend": "cd backend && npm run test"
+  },
+  "keywords": [
+    "koperasi",
+    "cooperative",
+    "management",
+    "accounting",
+    "cloudflare"
+  ],
+  "author": "Bagus Jimi",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "koperasi-database",
+  "version": "1.0.0",
+  "description": "Database schemas and migrations for Koperasi Desa",
+  "scripts": {
+    "setup": "wrangler d1 create koperasi-db && npm run migrate",
+    "migrate": "wrangler d1 migrations apply koperasi-db --local",
+    "migrate:prod": "wrangler d1 migrations apply koperasi-db",
+    "seed": "wrangler d1 execute koperasi-db --file=./seeds/initial-data.sql --local",
+    "seed:prod": "wrangler d1 execute koperasi-db --file=./seeds/initial-data.sql",
+    "console": "wrangler d1 execute koperasi-db --command=\"SELECT * FROM sqlite_master WHERE type='table';\" --local"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
