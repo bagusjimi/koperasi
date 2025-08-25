@@ -35,6 +35,9 @@ cd koperasi
 
 ### 1.2 Install Dependencies
 ```bash
+# Pastikan Anda di folder root project
+cd koperasi
+
 # Install semua dependencies
 npm run install:all
 
@@ -80,6 +83,9 @@ database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 ### 2.3 Update Konfigurasi Database
 ```bash
+# Copy template konfigurasi
+cp database/wrangler.toml.example database/wrangler.toml
+
 # Edit file database/wrangler.toml
 # Ganti database_id dengan ID yang didapat dari langkah sebelumnya
 ```
@@ -118,6 +124,9 @@ wrangler d1 execute koperasi-db --file=./seeds/initial-data.sql
 ### 3.1 Konfigurasi Backend
 ```bash
 cd ../backend
+
+# Copy template konfigurasi
+cp wrangler.toml.example wrangler.toml
 
 # Edit file backend/wrangler.toml
 ```
@@ -170,8 +179,10 @@ wrangler deploy
 ```bash
 cd ../frontend
 
-# Buat file .env.local
-touch .env.local
+# Copy template environment variables
+cp .env.example .env.local
+
+# Edit file .env.local dengan URL backend Anda
 ```
 
 **File `frontend/.env.local`:**
