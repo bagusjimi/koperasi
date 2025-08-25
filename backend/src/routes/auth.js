@@ -116,9 +116,9 @@ auth.post('/register', async (c) => {
       'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?) RETURNING id'
     ).bind(data.username, data.email, passwordHash, 'member').first();
 
-    await c.env.DB.prepare(
+    const memberId = await c.env.DB.prepare(
       `INSERT INTO members (user_id, member_number, full_name, id_number, phone, address, date_of_birth, gender, occupation, join_date) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, date('now'))`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, date('now')) RETURNING id`
     ).bind(
       userId.id,
       memberNumber,
@@ -129,7 +129,7 @@ auth.post('/register', async (c) => {
       data.dateOfBirth || null,
       data.gender || null,
       data.occupation || null
-    ).run();
+    ).first();
 
     // Create default savings accounts
     const savingsTypes = [
@@ -142,7 +142,7 @@ auth.post('/register', async (c) => {
       const accountNumber = `S${savings.type.charAt(0).toUpperCase()}${memberNumber.slice(3)}`;
       await c.env.DB.prepare(
         'INSERT INTO savings_accounts (member_id, account_type, account_number, balance, interest_rate) VALUES (?, ?, ?, ?, ?)'
-      ).bind(userId.id, savings.type, accountNumber, savings.amount, savings.rate).run();
+      ).bind(memberId.id, savings.type, accountNumber, savings.amount, savings.rate).run();
     }
 
     return c.json({
